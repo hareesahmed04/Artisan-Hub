@@ -1,0 +1,60 @@
+@model List<AdminUserRowVm>
+@{
+    ViewData["Title"] = "Users";
+    var role = ViewData["Role"] as string;
+    var q = ViewData["Q"] as string;
+}
+<form class="panel-card card-pad mb-4" method="get" asp-action="Users">
+    <div class="row g-2 align-items-center">
+        <div class="col-md-6">
+            <input class="form-control" type="search" name="q" value="@q" placeholder="Search name or email" />
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" name="role" data-autosubmit>
+                <option value="">All roles</option>
+                <option value="Customer" selected="@(role == "Customer")">Customers</option>
+                <option value="Artist" selected="@(role == "Artist")">Artists</option>
+                <option value="Admin" selected="@(role == "Admin")">Admins</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid"><button class="btn btn-primary" type="submit">Search</button></div>
+    </div>
+</form>
+
+<div class="panel-card">
+    <div class="card-head"><h5>@Fmt.Plural(Model.Count, "user")</h5></div>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Joined</th><th class="text-center">Orders</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar @(u.RoleName == "Admin" ? "avatar-olive" : u.RoleName == "Artist" ? "avatar-gold" : "")">@Fmt.Initials(u.FullName)</span>
+                                <div><div class="fw-bold">@u.FullName</div><div class="small text-muted">@u.Email</div></div>
+                            </div>
+                        </td>
+                        <td>@u.RoleName<div class="small text-muted">@u.StoreName</div></td>
+                        <td class="small">@(u.Phone ?? "-")</td>
+                        <td class="small">@Fmt.Date(u.CreatedAt)</td>
+                        <td class="text-center">@u.OrderCount</td>
+                        <td><span class="pill @(u.IsActive ? "pill-done" : "pill-stop")">@(u.IsActive ? "Active" : "Deactivated")</span></td>
+                        <td class="text-end">
+                            @if (u.RoleName != "Admin")
+                            {
+                                <form asp-action="ToggleUser" method="post" data-confirm="@(u.IsActive ? "Deactivate this account? The user will not be able to log in." : "Reactivate this account?")">
+                                    <input type="hidden" name="id" value="@u.UserID" />
+                                    <input type="hidden" name="role" value="@role" />
+                                    <input type="hidden" name="q" value="@q" />
+                                    <button class="btn btn-sm @(u.IsActive ? "btn-link text-danger" : "btn-olive")" type="submit">@(u.IsActive ? "Deactivate" : "Activate")</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

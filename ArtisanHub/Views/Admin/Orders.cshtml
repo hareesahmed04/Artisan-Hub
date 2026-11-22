@@ -1,0 +1,16 @@
+@model List<AdminOrderRowVm>
+@{
+    ViewData["Title"] = "Orders";
+    var current = ViewData["Status"] as string;
+}
+<ul class="nav nav-pills gap-1 mb-4">
+    <li class="nav-item"><a class="nav-link @(string.IsNullOrEmpty(current) ? "active" : "")" asp-action="Orders">All</a></li>
+    @foreach (var st in OrderStatus.All)
+    {
+        <li class="nav-item"><a class="nav-link @(current == st ? "active" : "")" asp-action="Orders" asp-route-status="@st">@st</a></li>
+    }
+</ul>
+<div class="panel-card">
+    <div class="card-head"><h5>@Fmt.Plural(Model.Count, "order")</h5><span class="small text-muted">Totals come from the vw_OrderTotals view</span></div>
+    <partial name="_OrdersTable" model="Model" />
+</div>

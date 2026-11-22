@@ -1,0 +1,244 @@
+@model ProductDetailsVm
+@{
+    var p = Model.Product;
+    ViewData["Title"] = p.Title;
+    var mainImage = Model.Images.FirstOrDefault()?.ImageUrl ?? "/images/placeholder.svg";
+    var returnUrl = Url.Action("Details", new { id = p.ProductID }) + "#reviews";
+    var isVisible = p.IsActive && p.Artist.IsVerified;
+}
+
+<div class="container">
+    <div class="page-head pb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index">Shop</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index" asp-route-category="@p.CategoryID">@p.Category.CategoryName</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@p.Title</li>
+            </ol>
+        </nav>
+    </div>
+
+    @if (!isVisible)
+    {
+        <div class="verify-banner mb-4"><i class="bi bi-eye-slash me-2"></i>Only you can see this page. The product is hidden or the store is waiting for verification.</div>
+    }
+
+    <div class="row g-5">
+        <div class="col-lg-6" data-gallery>
+            <div class="gallery-main">
+                <img src="@mainImage" alt="@p.Title" data-gallery-main />
+            </div>
+            @if (Model.Images.Count > 1)
+            {
+                <div class="gallery-thumbs">
+                    @for (var i = 0; i < Model.Images.Count; i++)
+                    {
+                        <button type="button" class="@(i == 0 ? "active" : "")" data-gallery-thumb="@Model.Images[i].ImageUrl" aria-label="Photo @(i + 1)">
+                            <img src="@Model.Images[i].ImageUrl" alt="" />
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-6">
+            <div class="d-flex gap-2 mb-2 flex-wrap">
+                <span class="tag tag-gold"><i class="bi @Fmt.CategoryIcon(p.CategoryID)"></i>@p.Category.CategoryName</span>
+                @if (p.IsCustomizable)
+                {
+                    <span class="tag tag-terra"><i class="bi bi-brush"></i>Custom orders welcome</span>
+                }
+            </div>
+            <h1 class="mb-2">@p.Title</h1>
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                <a class="text-muted fw-semibold" asp-controller="Stores" asp-action="Details" asp-route-id="@p.ArtistID"><i class="bi bi-shop me-1"></i>@p.Artist.StoreName</a>
+                <span class="text-muted"><i class="bi bi-geo-alt me-1"></i>@p.Artist.City.CityName</span>
+                <a class="stars" href="#reviews">
+                    @foreach (var star in Fmt.Stars(Model.AvgRating))
+                    {
+                        <i class="bi @star"></i>
+                    }
+                    <span class="num">@(Model.ReviewCount > 0 ? Fmt.Rating(Model.AvgRating) + " · " + Fmt.Plural(Model.ReviewCount, "review") : "No reviews yet")</span>
+                </a>
+            </div>
+
+            <div class="detail-price mb-1">@Fmt.Money(p.Price)</div>
+            <div class="mb-4">
+                @if (p.StockQty == 0)
+                {
+                    <span class="pill pill-stop">Sold out</span>
+                }
+                else if (p.StockQty <= 3)
+                {
+                    <span class="pill pill-pending">Only @p.StockQty left in stock</span>
+                }
+                else
+                {
+                    <span class="pill pill-done">In stock</span>
+                }
+            </div>
+
+            @if (Model.IsCustomer && isVisible && p.StockQty > 0)
+            {
+                <form asp-controller="Cart" asp-action="Add" method="post" class="mb-3">
+                    <input type="hidden" name="productId" value="@p.ProductID" />
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <div class="input-group qty-input" data-qty>
+                            <button class="btn btn-soft px-3" type="button" data-step="-1" aria-label="Less">&minus;</button>
+                            <input class="form-control" type="number" name="quantity" value="1" min="1" max="@p.StockQty" aria-label="Quantity" />
+                            <button class="btn btn-soft px-3" type="button" data-step="1" aria-label="More">+</button>
+                        </div>
+                        <button class="btn btn-primary btn-lg flex-grow-1" type="submit"><i class="bi bi-bag-plus me-1"></i> Add to cart</button>
+                        <button class="btn btn-dark btn-lg" type="submit" name="buyNow" value="true">Buy now</button>
+                    </div>
+                    @if (Model.InCart > 0)
+                    {
+                        <div class="small text-muted mt-2"><i class="bi bi-bag-check me-1"></i>You have @Model.InCart in your cart. <a asp-controller="Cart" asp-action="Index">View cart</a></div>
+                    }
+                </form>
+            }
+            else if (Model.IsAnonymous && p.StockQty > 0)
+            {
+                <a class="btn btn-primary btn-lg w-100 mb-3" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", new { id = p.ProductID })"><i class="bi bi-box-arrow-in-right me-1"></i> Log in to buy</a>
+            }
+            else if (!Model.IsCustomer && !Model.IsAnonymous)
+            {
+                <div class="maker-box mb-3 small"><i class="bi bi-info-circle me-1"></i>Shopping is available on customer accounts. You are signed in as an artist or admin.</div>
+            }
+
+            @if (p.IsCustomizable && (Model.IsCustomer || Model.IsAnonymous))
+            {
+                <a class="btn btn-outline-primary w-100 mb-4" asp-controller="Requests" asp-action="Create" asp-route-productId="@p.ProductID"><i class="bi bi-brush me-1"></i> Request a custom version</a>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(p.Description))
+            {
+                <h5 class="mt-2">About this piece</h5>
+                <p class="text-muted" style="white-space:pre-line">@p.Description</p>
+            }
+
+            <div class="row g-2 small my-3">
+                <div class="col-sm-4"><div class="maker-box h-100"><i class="bi bi-hand-thumbs-up text-terra me-1"></i>Handmade</div></div>
+                <div class="col-sm-4"><div class="maker-box h-100"><i class="bi bi-truck text-terra me-1"></i>Ships from @p.Artist.City.CityName</div></div>
+                <div class="col-sm-4"><div class="maker-box h-100"><i class="bi bi-cash-coin text-terra me-1"></i>Rs. 250 delivery</div></div>
+            </div>
+
+            <div class="maker-box d-flex align-items-center gap-3 mt-3">
+                <span class="avatar" style="width:52px;height:52px">@Fmt.Initials(p.Artist.StoreName)</span>
+                <div class="flex-grow-1">
+                    <div class="small text-muted">Made by</div>
+                    <div class="fw-bold">@p.Artist.StoreName</div>
+                    <div class="small text-muted">@p.Artist.City.CityName, @p.Artist.City.Province</div>
+                </div>
+                <a class="btn btn-sm btn-outline-primary" asp-controller="Stores" asp-action="Details" asp-route-id="@p.ArtistID">Visit store</a>
+            </div>
+        </div>
+    </div>
+
+    <section id="reviews" class="section pb-0">
+        <h2 class="mb-4">Reviews</h2>
+        <div class="row g-4 g-lg-5">
+            <div class="col-lg-4">
+                <div class="card-soft card-pad">
+                    <div class="d-flex align-items-end gap-2 mb-1">
+                        <span class="serif" style="font-size:3rem;line-height:1;font-weight:700">@Fmt.Rating(Model.AvgRating)</span>
+                        <span class="text-muted mb-1">out of 5</span>
+                    </div>
+                    <div class="stars mb-3">
+                        @foreach (var star in Fmt.Stars(Model.AvgRating))
+                        {
+                            <i class="bi @star"></i>
+                        }
+                        <span class="num">@Fmt.Plural(Model.ReviewCount, "review")</span>
+                    </div>
+                    @for (var s = 5; s >= 1; s--)
+                    {
+                        var count = Model.RatingCounts[s - 1];
+                        var pct = Model.ReviewCount == 0 ? 0 : count * 100 / Model.ReviewCount;
+                        <div class="rating-row">
+                            <span>@s <i class="bi bi-star-fill text-terra"></i></span>
+                            <div class="progress rating-bar"><div class="progress-bar" style="width:@(pct)%"></div></div>
+                            <span class="count">@count</span>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.CanReview)
+                {
+                    <div class="card-soft card-pad mt-3">
+                        <h5>@(Model.MyReview == null ? "Write a review" : "Update your review")</h5>
+                        <form asp-controller="Reviews" asp-action="Save" method="post">
+                            <input type="hidden" name="productId" value="@p.ProductID" />
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <div class="star-input mb-2">
+                                @for (var s = 5; s >= 1; s--)
+                                {
+                                    <input type="radio" id="star@(s)" name="rating" value="@s" checked="@(Model.MyReview?.Rating == s)" />
+                                    <label for="star@(s)" title="@s stars"><i class="bi bi-star-fill"></i></label>
+                                }
+                            </div>
+                            <textarea class="form-control mb-2" name="comment" rows="3" maxlength="1000" placeholder="What did you like about it?">@(Model.MyReview?.Comment)</textarea>
+                            <button class="btn btn-primary w-100" type="submit">@(Model.MyReview == null ? "Post review" : "Save changes")</button>
+                        </form>
+                    </div>
+                }
+                else if (Model.IsCustomer)
+                {
+                    <p class="small text-muted mt-3"><i class="bi bi-info-circle me-1"></i>You can review this item once it has been delivered to you.</p>
+                }
+            </div>
+            <div class="col-lg-8">
+                @if (Model.Reviews.Count == 0)
+                {
+                    <div class="empty-state card-soft"><i class="bi bi-chat-heart"></i>No reviews yet. Be the first to share your thoughts after your order arrives.</div>
+                }
+                else
+                {
+                    <div class="card-soft px-4">
+                        @foreach (var r in Model.Reviews)
+                        {
+                            <div class="review">
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <span class="avatar avatar-olive">@Fmt.Initials(r.User.FullName)</span>
+                                    <div>
+                                        <div class="fw-bold">@r.User.FullName</div>
+                                        <div class="small text-muted">@Fmt.Date(r.ReviewDate) &middot; Verified purchase</div>
+                                    </div>
+                                    <div class="stars ms-auto">
+                                        @foreach (var star in Fmt.Stars(r.Rating))
+                                        {
+                                            <i class="bi @star"></i>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(r.Comment))
+                                {
+                                    <p class="mb-0">@r.Comment</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    @if (Model.Related.Count > 0)
+    {
+        <section class="section pb-0">
+            <div class="section-head">
+                <div>
+                    <div class="eyebrow">You may also like</div>
+                    <h2>More @p.Category.CategoryName.ToLower()</h2>
+                </div>
+            </div>
+            <div class="row g-3 g-lg-4">
+                @foreach (var item in Model.Related)
+                {
+                    <div class="col-6 col-md-3"><partial name="_ProductCard" model="item" /></div>
+                }
+            </div>
+        </section>
+    }
+</div>

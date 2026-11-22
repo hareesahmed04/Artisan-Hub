@@ -1,0 +1,117 @@
+@model CheckoutVm
+@{
+    ViewData["Title"] = "Checkout";
+    var f = Model.Form;
+    var methods = new[]
+    {
+        new { Code = PaymentMethod.COD, Icon = "bi-cash-stack", Note = "Pay the courier when your parcels arrive" },
+        new { Code = PaymentMethod.Card, Icon = "bi-credit-card", Note = "Demo payment: no real card is charged" },
+        new { Code = PaymentMethod.JazzCash, Icon = "bi-phone", Note = "Demo payment: marked as paid instantly" },
+        new { Code = PaymentMethod.EasyPaisa, Icon = "bi-wallet2", Note = "Demo payment: marked as paid instantly" }
+    };
+}
+<div class="container">
+    <div class="page-head">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a asp-controller="Cart" asp-action="Index">Cart</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+            </ol>
+        </nav>
+        <h1>Checkout</h1>
+    </div>
+
+    <form asp-action="Place" method="post">
+        <div asp-validation-summary="All" class="flash flash-error mb-3"></div>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card-soft card-pad mb-4">
+                    <h5 class="section-title"><span class="step-no">1</span>Delivery address</h5>
+                    <div class="d-grid gap-2">
+                        @foreach (var a in Model.Addresses)
+                        {
+                            <label class="choice">
+                                <input class="form-check-input" type="radio" name="AddressID" value="@a.AddressID" checked="@(!f.UseNewAddress && f.AddressID == a.AddressID)" onchange="document.getElementById('useNew').checked=false;document.getElementById('newAddress').classList.add('d-none')" />
+                                <span>
+                                    <span class="fw-bold d-block">@a.City.CityName @(a.IsDefault ? "(default)" : "")</span>
+                                    <span class="text-muted">@(a.AddressLine + (a.PostalCode != null ? ", " + a.PostalCode : ""))</span>
+                                </span>
+                            </label>
+                        }
+                        <label class="choice">
+                            <input class="form-check-input" type="checkbox" id="useNew" name="UseNewAddress" value="true" checked="@f.UseNewAddress" data-toggle-target="#newAddress" data-toggle-value="checked" />
+                            <span class="fw-bold">Deliver to a new address</span>
+                        </label>
+                    </div>
+                    <div id="newAddress" class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label" for="NewAddressLine">Street address</label>
+                            <input class="form-control" id="NewAddressLine" name="NewAddressLine" value="@f.NewAddressLine" placeholder="House, street, area" maxlength="200" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="NewCityID">City</label>
+                            <select class="form-select" id="NewCityID" name="NewCityID">
+                                <option value="">Choose city</option>
+                                @foreach (var c in Model.Cities)
+                                {
+                                    <option value="@c.Value" selected="@(f.NewCityID?.ToString() == c.Value)">@c.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="NewPostalCode">Postal code</label>
+                            <input class="form-control" id="NewPostalCode" name="NewPostalCode" value="@f.NewPostalCode" maxlength="10" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-soft card-pad mb-4">
+                    <h5 class="section-title"><span class="step-no">2</span>Payment method</h5>
+                    <div class="row g-2">
+                        @foreach (var m in methods)
+                        {
+                            <div class="col-md-6">
+                                <label class="choice h-100">
+                                    <input class="form-check-input" type="radio" name="Method" value="@m.Code" checked="@(f.Method == m.Code)" />
+                                    <span>
+                                        <span class="fw-bold d-block"><i class="bi @m.Icon text-terra me-1"></i>@PaymentMethod.Label(m.Code)</span>
+                                        <span class="small text-muted">@m.Note</span>
+                                    </span>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-soft card-pad">
+                    <h5 class="section-title"><span class="step-no">3</span>Review items</h5>
+                    @foreach (var g in Model.Cart.Groups)
+                    {
+                        <div class="mb-3">
+                            <div class="small fw-bold mb-2"><i class="bi bi-shop text-terra me-1"></i>@g.StoreName &middot; <span class="text-muted fw-normal">ships from @g.CityName</span></div>
+                            @foreach (var line in g.Lines)
+                            {
+                                <div class="d-flex align-items-center gap-3 py-2">
+                                    <img src="@line.ImageUrl" alt="" class="mini-thumb" />
+                                    <div class="flex-grow-1">@line.Title <span class="text-muted">&times; @line.Quantity</span></div>
+                                    <div class="fw-semibold">@Fmt.Money(line.LineTotal)</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="summary-card">
+                    <h5 class="mb-3">Order total</h5>
+                    <div class="summary-row"><span class="text-muted">Items (@Model.Cart.ItemCount)</span><span>@Fmt.Money(Model.Cart.ItemsTotal)</span></div>
+                    <div class="summary-row"><span class="text-muted">Delivery (@Model.Cart.Groups.Count &times; Rs. 250)</span><span>@Fmt.Money(Model.Cart.Shipping)</span></div>
+                    <div class="summary-row summary-total"><span>Total to pay</span><span>@Fmt.Money(Model.Cart.Total)</span></div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 mt-3"><i class="bi bi-lock me-1"></i> Place order</button>
+                    <p class="small text-muted mt-3 mb-0">By placing your order, the artists are notified and will ship within a few days. You can cancel any time before a parcel ships.</p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

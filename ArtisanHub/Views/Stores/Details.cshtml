@@ -1,0 +1,72 @@
+@model StoreDetailsVm
+@{
+    var a = Model.Artist;
+    ViewData["Title"] = a.StoreName;
+}
+<section class="hero">
+    <div class="container py-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-4">
+                    <span class="avatar avatar-lg">@Fmt.Initials(a.StoreName)</span>
+                    <div>
+                        <div class="eyebrow mb-1"><i class="bi bi-patch-check-fill me-1"></i>Verified artist</div>
+                        <h1 class="mb-1" style="font-size:clamp(2rem,4vw,2.8rem)">@a.StoreName</h1>
+                        <div class="meta">
+                            <span><i class="bi bi-geo-alt"></i>@a.City.CityName, @a.City.Province</span>
+                            <span><i class="bi bi-calendar3"></i>Selling since @a.JoinDate.ToString("MMMM yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(a.Bio))
+                {
+                    <p class="lead mt-4 mb-0">@a.Bio</p>
+                }
+            </div>
+            <div class="col-lg-4">
+                <div class="card-soft card-pad">
+                    <div class="row text-center g-0">
+                        <div class="col-4">
+                            <div class="serif fs-3 fw-bold">@Model.Products.Count</div>
+                            <div class="small text-muted">Products</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="serif fs-3 fw-bold">@Fmt.Rating(Model.AvgRating)</div>
+                            <div class="small text-muted">@Fmt.Plural(Model.ReviewCount, "review")</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="serif fs-3 fw-bold">@Model.ItemsSold</div>
+                            <div class="small text-muted">Items sold</div>
+                        </div>
+                    </div>
+                    @if (Model.IsCustomer || Model.IsAnonymous)
+                    {
+                        <a class="btn btn-primary w-100 mt-3" asp-controller="Requests" asp-action="Create" asp-route-artistId="@a.ArtistID"><i class="bi bi-brush me-1"></i> Request a custom piece</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container section">
+    <div class="section-head">
+        <div>
+            <div class="eyebrow">From the studio</div>
+            <h2>Products by @a.StoreName</h2>
+        </div>
+    </div>
+    @if (Model.Products.Count == 0)
+    {
+        <div class="empty-state card-soft"><i class="bi bi-box-seam"></i>This artist has not listed any products yet.</div>
+    }
+    else
+    {
+        <div class="row g-3 g-lg-4">
+            @foreach (var p in Model.Products)
+            {
+                <div class="col-6 col-md-4 col-lg-3"><partial name="_ProductCard" model="p" /></div>
+            }
+        </div>
+    }
+</div>

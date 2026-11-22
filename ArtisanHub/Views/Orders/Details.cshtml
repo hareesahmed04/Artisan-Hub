@@ -1,0 +1,156 @@
+@model OrderDetailsVm
+@{
+    var o = Model.Order;
+    ViewData["Title"] = $"Order #{o.OrderID}";
+    var payment = o.Payment;
+    var returnUrl = Url.Action("Details", new { id = o.OrderID });
+    string[] steps = { "Placed", "Paid", "Shipped", "Delivered" };
+    var reached = o.Status switch
+    {
+        OrderStatus.Pending => 1,
+        OrderStatus.Paid => 2,
+        OrderStatus.Shipped => 3,
+        OrderStatus.Delivered => 4,
+        _ => 0
+    };
+}
+<div class="container">
+    <div class="page-head">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a asp-action="Index">My orders</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Order #@o.OrderID</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1>Order #@o.OrderID</h1>
+                <div class="text-muted mt-1">Placed on @Fmt.DateTimeText(o.OrderDate)</div>
+            </div>
+            <span class="pill @Fmt.StatusClass(o.Status) fs-6">@o.Status</span>
+        </div>
+    </div>
+
+    @if (Model.JustPlaced)
+    {
+        <div class="success-banner mb-4 d-flex gap-3 align-items-center">
+            <i class="bi bi-bag-check-fill fs-1 text-olive"></i>
+            <div>
+                <h4 class="mb-1">Thank you for supporting local makers!</h4>
+                <p class="mb-0">Your order has been sent to @o.Shipments.Count @(o.Shipments.Count == 1 ? "artist" : "artists"). You will see tracking numbers here as soon as each parcel ships.</p>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            @if (o.Status != OrderStatus.Cancelled)
+            {
+                <div class="card-soft card-pad mb-4">
+                    <div class="track">
+                        @for (var i = 0; i < steps.Length; i++)
+                        {
+                            var done = i < reached || (i == 1 && reached >= 2);
+                            <div class="step @(done ? "done" : "")">
+                                <div class="dot"><i class="bi @(done ? "bi-check-lg" : "bi-circle")"></i></div>
+                                @steps[i]
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="flash flash-info mb-4"><i class="bi bi-x-circle-fill"></i><div>@(payment?.Status == PaymentStatus.Refunded ? "This order was cancelled. Stock was returned to the artists and your payment has been refunded." : "This order was cancelled. Stock was returned to the artists.")</div></div>
+            }
+
+            @foreach (var group in o.Items.GroupBy(i => i.Product.ArtistID))
+            {
+                var shipment = o.Shipments.FirstOrDefault(s => s.ArtistID == group.Key);
+                var storeName = shipment?.Artist.StoreName ?? "Artist";
+                <div class="shipment-box">
+                    <div class="head">
+                        <div>
+                            <div class="fw-bold"><i class="bi bi-shop text-terra me-1"></i>@storeName</div>
+                            @if (shipment != null)
+                            {
+                                <div class="small text-muted">Ships from @shipment.Artist.City.CityName</div>
+                            }
+                        </div>
+                        @if (shipment != null)
+                        {
+                            <div class="text-end">
+                                <span class="pill @Fmt.StatusClass(shipment.Status)">@shipment.Status</span>
+                                @if (!string.IsNullOrEmpty(shipment.TrackingNo))
+                                {
+                                    <div class="small mt-1"><i class="bi bi-truck me-1"></i>@shipment.CourierName &middot; <span class="fw-semibold">@shipment.TrackingNo</span></div>
+                                }
+                                @if (shipment.DeliveredAt.HasValue)
+                                {
+                                    <div class="small text-muted">Delivered @Fmt.Date(shipment.DeliveredAt)</div>
+                                }
+                                else if (shipment.ShippedAt.HasValue)
+                                {
+                                    <div class="small text-muted">Shipped @Fmt.Date(shipment.ShippedAt)</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                    @foreach (var item in group)
+                    {
+                        <div class="item-row flex-wrap">
+                            <img src="@Model.Images[item.ProductID]" alt="" />
+                            <div class="flex-grow-1">
+                                <a class="fw-bold text-reset" asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductID">@item.Product.Title</a>
+                                <div class="small text-muted">@Fmt.Money(item.UnitPrice) &times; @item.Quantity</div>
+                            </div>
+                            <div class="fw-bold">@Fmt.Money(item.UnitPrice * item.Quantity)</div>
+                            @if (Model.ReviewableProductIds.Contains(item.ProductID))
+                            {
+                                <a class="btn btn-sm @(Model.ReviewedProductIds.Contains(item.ProductID) ? "btn-soft" : "btn-outline-primary")" asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductID" asp-fragment="reviews">
+                                    <i class="bi bi-star me-1"></i>@(Model.ReviewedProductIds.Contains(item.ProductID) ? "Edit review" : "Write review")
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="summary-card">
+                <h5 class="mb-3">Summary</h5>
+                <div class="summary-row"><span class="text-muted">Items</span><span>@Fmt.Money(Model.ItemsTotal)</span></div>
+                <div class="summary-row"><span class="text-muted">Delivery</span><span>@Fmt.Money(o.ShippingFee)</span></div>
+                <div class="summary-row summary-total"><span>Total</span><span>@Fmt.Money(Model.Total)</span></div>
+
+                <hr />
+                <div class="small-caps text-muted mb-1">Payment</div>
+                @if (payment != null)
+                {
+                    <div class="fw-semibold">@PaymentMethod.Label(payment.Method)</div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="pill @Fmt.StatusClass(payment.Status)">@payment.Status</span>
+                        @if (!string.IsNullOrEmpty(payment.TransactionRef))
+                        {
+                            <span class="small text-muted">Ref @payment.TransactionRef</span>
+                        }
+                    </div>
+                }
+
+                <hr />
+                <div class="small-caps text-muted mb-1">Delivery address</div>
+                <div>@o.Address.AddressLine</div>
+                <div class="text-muted">@(o.Address.City.CityName + (o.Address.PostalCode != null ? " " + o.Address.PostalCode : ""))</div>
+
+                @if (Model.CanCancel)
+                {
+                    <form asp-action="Cancel" asp-route-id="@o.OrderID" method="post" class="mt-4" data-confirm="Cancel this order? Stock will be returned to the artists.">
+                        <button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-x-circle me-1"></i> Cancel order</button>
+                    </form>
+                    <p class="small text-muted mt-2 mb-0">You can cancel until the first parcel ships.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

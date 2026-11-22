@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "About";
+}
+<section class="hero">
+    <div class="container py-5">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <div class="eyebrow mb-2">About ArtisanHub</div>
+                <h1 class="mb-3">A fairer place to sell <em>handmade</em> work</h1>
+                <p class="lead">Independent crafters struggle to sell online because global platforms charge heavy fees and bury small makers among mass-produced listings. ArtisanHub is a marketplace dedicated only to local handmade goods and custom art.</p>
+            </div>
+            <div class="col-lg-5 text-center">
+                <img src="~/images/products/p18.svg" alt="" class="img-fluid rounded-4" style="max-width:340px" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="icon"><i class="bi bi-person-check"></i></div>
+                    <h5>For customers</h5>
+                    <p class="text-muted mb-0">Search by craft, city and price, buy through a simple cart and checkout, track each artist's parcel and review what you bought.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="icon"><i class="bi bi-shop"></i></div>
+                    <h5>For artists</h5>
+                    <p class="text-muted mb-0">Open a store, list products with photos, ship orders with tracking numbers, answer custom requests with a quote and follow your sales.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="icon"><i class="bi bi-shield-check"></i></div>
+                    <h5>For the admin</h5>
+                    <p class="text-muted mb-0">Verify new artists before they appear in the shop, manage categories and users, and see sales by artist, category and city.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-soft mt-5">
+            <div class="card-pad">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-8">
+                        <div class="eyebrow mb-1">DBMS course project</div>
+                        <h3 class="mb-2">Built on a 15-table SQL Server database</h3>
+                        <p class="text-muted mb-0">Normalized to 3NF, with foreign keys, CHECK and UNIQUE constraints, five reporting views (order totals and sales by artist, category and city) and a trigger that reduces stock when an order is placed. Group members: Harees Ahmed and Zeeshan Wazir, BS Computer Science, Iqra University.</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <a class="btn btn-primary" asp-controller="Products" asp-action="Index">Start shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

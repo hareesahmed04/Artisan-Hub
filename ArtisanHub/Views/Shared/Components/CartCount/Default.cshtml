@@ -1,0 +1,8 @@
+@model int
+<a class="icon-btn" asp-controller="Cart" asp-action="Index" aria-label="Cart, @Model items">
+    <i class="bi bi-bag fs-5"></i>
+    @if (Model > 0)
+    {
+        <span class="count">@Model</span>
+    }
+</a>

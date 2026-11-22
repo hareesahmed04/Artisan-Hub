@@ -1,0 +1,68 @@
+@model CustomRequestFormVm
+@{
+    ViewData["Title"] = "Request a custom piece";
+}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="page-head">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a asp-action="Index">Custom requests</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">New request</li>
+                    </ol>
+                </nav>
+                <h1>Request a custom piece</h1>
+                <p class="text-muted mt-1 mb-0">The artist reads your request and replies with a price. Nothing is charged until you accept.</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ProductTitle))
+            {
+                <div class="maker-box mb-4"><i class="bi bi-brush text-terra me-2"></i>Based on <strong>@Model.ProductTitle</strong></div>
+            }
+
+            <div class="card-soft card-pad">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label asp-for="ArtistID" class="form-label"></label>
+                            <select asp-for="ArtistID" asp-items="Model.Artists" class="form-select">
+                                <option value="">Choose an artist</option>
+                            </select>
+                            <span asp-validation-for="ArtistID" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="CategoryID" class="form-label"></label>
+                            <select asp-for="CategoryID" asp-items="Model.Categories" class="form-select">
+                                <option value="">Any category</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="6" placeholder="Size, colours, materials, names or text to include, and anything else the artist should know."></textarea>
+                            <span asp-validation-for="Description" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Budget" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs.</span>
+                                <input asp-for="Budget" class="form-control" type="number" min="100" step="100" placeholder="Optional" />
+                            </div>
+                            <span asp-validation-for="Budget" class="field-validation-error"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="RequiredBy" class="form-label"></label>
+                            <input asp-for="RequiredBy" class="form-control" type="date" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="RequiredBy" class="field-validation-error"></span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-send me-1"></i> Send request</button>
+                        <a class="btn btn-soft btn-lg" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

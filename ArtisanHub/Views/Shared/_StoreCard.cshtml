@@ -1,0 +1,16 @@
+@model StoreCardVm
+<div class="store-card">
+    <div class="d-flex align-items-center gap-3">
+        <span class="avatar" style="width:54px;height:54px;font-size:1.1rem">@Fmt.Initials(Model.StoreName)</span>
+        <div>
+            <div class="name">@Model.StoreName</div>
+            <div class="meta"><span><i class="bi bi-geo-alt"></i>@Model.CityName</span></div>
+        </div>
+    </div>
+    <div class="bio">@(Model.Bio ?? "A local maker on ArtisanHub.")</div>
+    <div class="meta mt-auto">
+        <span><i class="bi bi-box-seam"></i>@Fmt.Plural(Model.ProductCount, "product")</span>
+        <span><i class="bi bi-star-fill"></i>@(Model.ReviewCount > 0 ? Fmt.Rating(Model.AvgRating) + " (" + Model.ReviewCount + ")" : "New")</span>
+    </div>
+    <a class="btn btn-outline-primary btn-sm align-self-start" asp-controller="Stores" asp-action="Details" asp-route-id="@Model.ArtistID">Visit store</a>
+</div>

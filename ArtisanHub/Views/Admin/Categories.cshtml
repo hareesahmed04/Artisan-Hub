@@ -1,0 +1,75 @@
+@model List<AdminCategoryRowVm>
+@{
+    ViewData["Title"] = "Categories";
+}
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="panel-card">
+            <div class="card-head"><h5>@Fmt.Plural(Model.Count, "category", "categories")</h5></div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead><tr><th>Category</th><th class="text-center">Products</th><th class="text-center">Requests</th><th class="text-end">Edit</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="wrap">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@Fmt.CategoryImage(c.CategoryID)" alt="" class="mini-thumb" />
+                                        <div><div class="fw-bold">@c.CategoryName</div><div class="small text-muted">@c.Description</div></div>
+                                    </div>
+                                </td>
+                                <td class="text-center">@c.ProductCount</td>
+                                <td class="text-center">@c.RequestCount</td>
+                                <td class="text-end text-nowrap">
+                                    <button class="btn btn-soft btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#edit-@c.CategoryID">Edit</button>
+                                    @if (c.ProductCount == 0 && c.RequestCount == 0)
+                                    {
+                                        <form asp-action="DeleteCategory" asp-route-id="@c.CategoryID" method="post" class="d-inline" data-confirm="Delete this category?">
+                                            <button class="btn btn-link btn-sm text-danger" type="submit">Delete</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="edit-@c.CategoryID">
+                                <td colspan="4" class="bg-cream wrap">
+                                    <form asp-action="SaveCategory" method="post" class="row g-2 align-items-end">
+                                        <input type="hidden" name="CategoryID" value="@c.CategoryID" />
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Name</label>
+                                            <input class="form-control" name="CategoryName" value="@c.CategoryName" maxlength="60" required />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Description</label>
+                                            <input class="form-control" name="Description" value="@c.Description" maxlength="300" />
+                                        </div>
+                                        <div class="col-md-2 d-grid">
+                                            <button class="btn btn-primary" type="submit">Save</button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel-card card-pad">
+            <h5 class="mb-3">Add a category</h5>
+            <form asp-action="SaveCategory" method="post">
+                <div class="mb-3">
+                    <label class="form-label" for="newName">Name</label>
+                    <input class="form-control" id="newName" name="CategoryName" maxlength="60" required placeholder="e.g. Leather Crafts" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="newDesc">Description</label>
+                    <textarea class="form-control" id="newDesc" name="Description" rows="3" maxlength="300"></textarea>
+                </div>
+                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg me-1"></i> Add category</button>
+            </form>
+            <p class="small text-muted mt-3 mb-0">A category can only be deleted when no products or custom requests use it.</p>
+        </div>
+    </div>
+</div>

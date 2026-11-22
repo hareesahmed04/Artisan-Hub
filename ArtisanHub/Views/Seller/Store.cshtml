@@ -1,0 +1,57 @@
+@model StoreProfileVm
+@{
+    ViewData["Title"] = "Store profile";
+    var artist = ViewData["Artist"] as Artist;
+}
+@if (artist != null)
+{
+    <partial name="_VerifyBanner" model="artist" />
+}
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="panel-card card-pad">
+            <form asp-action="Store" method="post">
+                <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <label asp-for="StoreName" class="form-label"></label>
+                        <input asp-for="StoreName" class="form-control" />
+                        <span asp-validation-for="StoreName" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-md-5">
+                        <label asp-for="CityID" class="form-label"></label>
+                        <select asp-for="CityID" asp-items="Model.Cities" class="form-select">
+                            <option value="">Choose city</option>
+                        </select>
+                        <span asp-validation-for="CityID" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Bio" class="form-label"></label>
+                        <textarea asp-for="Bio" class="form-control" rows="6" placeholder="Your story, your craft and what makes your work special"></textarea>
+                        <span asp-validation-for="Bio" class="field-validation-error"></span>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-4" type="submit">Save store profile</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel-card card-pad">
+            <div class="small-caps text-muted mb-2">Verification</div>
+            @if (Model.IsVerified)
+            {
+                <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-patch-check-fill text-olive fs-4"></i><span class="fw-bold">Verified store</span></div>
+                <p class="small text-muted">Your products are visible to every customer.</p>
+                if (artist != null)
+                {
+                    <a class="btn btn-soft btn-sm" asp-controller="Stores" asp-action="Details" asp-route-id="@artist.ArtistID" target="_blank">View public store</a>
+                }
+            }
+            else
+            {
+                <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-hourglass-split text-terra fs-4"></i><span class="fw-bold">Awaiting verification</span></div>
+                <p class="small text-muted mb-0">The admin reviews new stores before they appear in the shop.</p>
+            }
+        </div>
+    </div>
+</div>

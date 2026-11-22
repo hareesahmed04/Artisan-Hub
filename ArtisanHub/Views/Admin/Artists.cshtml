@@ -1,0 +1,72 @@
+@model List<AdminArtistRowVm>
+@{
+    ViewData["Title"] = "Artists";
+    var filter = ViewData["Filter"] as string;
+}
+
+<ul class="nav nav-pills gap-1 mb-4">
+    <li class="nav-item"><a class="nav-link @(string.IsNullOrEmpty(filter) ? "active" : "")" asp-action="Artists">All</a></li>
+    <li class="nav-item"><a class="nav-link @(filter == "pending" ? "active" : "")" asp-action="Artists" asp-route-filter="pending">Waiting for verification</a></li>
+    <li class="nav-item"><a class="nav-link @(filter == "verified" ? "active" : "")" asp-action="Artists" asp-route-filter="verified">Verified</a></li>
+</ul>
+
+<div class="panel-card">
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-shop"></i>No artists in this list.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr><th>Store</th><th>Owner</th><th>City</th><th class="text-center">Products</th><th class="text-end">Sales</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@a.StoreName</div>
+                                <div class="small text-muted cell-clip" title="@a.Bio">@(a.Bio ?? "No bio yet")</div>
+                            </td>
+                            <td>@a.OwnerName<div class="small text-muted">@a.Email</div></td>
+                            <td class="small">@a.CityName<div class="text-muted">since @Fmt.Date(a.JoinDate)</div></td>
+                            <td class="text-center">@a.ProductCount</td>
+                            <td class="text-end fw-semibold">@Fmt.Money(a.TotalSales)</td>
+                            <td>
+                                @if (a.IsVerified)
+                                {
+                                    <span class="pill pill-done">Verified</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-pending">Pending</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                @if (a.IsVerified)
+                                {
+                                    <a class="btn btn-soft btn-sm" asp-controller="Stores" asp-action="Details" asp-route-id="@a.ArtistID" target="_blank">View</a>
+                                }
+                                <form asp-action="VerifyArtist" method="post" class="d-inline" data-confirm="@(a.IsVerified ? "Remove verification? The store's products will be hidden from the shop." : "Verify this artist? Their products will become visible in the shop.")">
+                                    <input type="hidden" name="id" value="@a.ArtistID" />
+                                    <input type="hidden" name="verify" value="@(a.IsVerified ? "false" : "true")" />
+                                    <input type="hidden" name="filter" value="@filter" />
+                                    @if (a.IsVerified)
+                                    {
+                                        <button class="btn btn-link btn-sm text-muted" type="submit">Unverify</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-olive btn-sm" type="submit"><i class="bi bi-check2 me-1"></i>Verify</button>
+                                    }
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

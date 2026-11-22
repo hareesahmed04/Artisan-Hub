@@ -1,0 +1,164 @@
+@{
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var isCustomer = User.IsInRole(RoleNames.Customer);
+    var isArtist = User.IsInRole(RoleNames.Artist);
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var title = ViewData["Title"] as string;
+    var hasFlash = TempData.Peek("Success") != null || TempData.Peek("Error") != null || TempData.Peek("Info") != null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(title != null ? title + " · ArtisanHub" : "ArtisanHub · Handmade by local artists")</title>
+    <meta name="description" content="ArtisanHub is a marketplace for handmade goods and custom art from verified local artists in Pakistan." />
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@@9..144,500;9..144,600;9..144,700&family=Manrope:wght@@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="top-strip py-2">
+        <div class="container d-flex justify-content-between flex-wrap gap-2">
+            <span><i class="bi bi-stars me-1"></i> Handmade by verified local artists across Pakistan</span>
+            <span class="d-none d-md-inline">
+                Rs. 250 delivery per artist &nbsp;·&nbsp; Free custom quotes &nbsp;·&nbsp;
+                <a asp-controller="Account" asp-action="Register" asp-route-type="Artist">Sell on ArtisanHub</a>
+            </span>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg site-nav sticky-top py-2">
+        <div class="container">
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                <img src="~/images/logo-mark.svg" alt="ArtisanHub logo" />
+                <span class="brand-name">Artisan<span>Hub</span></span>
+            </a>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Open menu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <form class="nav-search position-relative flex-grow-1 mx-lg-4 my-3 my-lg-0" asp-controller="Products" asp-action="Index" method="get" role="search">
+                    <i class="bi bi-search"></i>
+                    <input class="form-control" type="search" name="q" placeholder="Search pottery, shawls, jewelry..." value="@Context.Request.Query["q"]" aria-label="Search products" />
+                </form>
+                <ul class="navbar-nav align-items-lg-center gap-lg-1">
+                    <li class="nav-item"><a class="nav-link @(controller == "Products" ? "active" : "")" asp-controller="Products" asp-action="Index">Shop</a></li>
+                    <li class="nav-item"><a class="nav-link @(controller == "Stores" ? "active" : "")" asp-controller="Stores" asp-action="Index">Artists</a></li>
+                    @if (isCustomer)
+                    {
+                        <li class="nav-item"><a class="nav-link @(controller == "Requests" ? "active" : "")" asp-controller="Requests" asp-action="Index">Custom requests</a></li>
+                    }
+                    else if (!isAuth)
+                    {
+                        <li class="nav-item"><a class="nav-link @(controller == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "About" ? "active" : "")" asp-controller="Home" asp-action="About">About</a></li>
+                    }
+                </ul>
+                <div class="d-flex align-items-center gap-2 ms-lg-3 mt-3 mt-lg-0">
+                    @if (isCustomer)
+                    {
+                        @await Component.InvokeAsync("CartCount")
+                    }
+                    @if (isAuth)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-soft d-flex align-items-center gap-2 ps-1 pe-3 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="avatar">@Fmt.Initials(User.GetDisplayName())</span>
+                                <span class="d-none d-xl-inline">@User.GetDisplayName().Split(' ')[0]</span>
+                                <i class="bi bi-chevron-down small"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @if (isAdmin)
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i>Admin panel</a></li>
+                                }
+                                @if (isArtist)
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Seller" asp-action="Dashboard"><i class="bi bi-shop me-2"></i>Seller panel</a></li>
+                                }
+                                @if (isCustomer)
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index"><i class="bi bi-bag-check me-2"></i>My orders</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Requests" asp-action="Index"><i class="bi bi-brush me-2"></i>Custom requests</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart3 me-2"></i>Cart</a></li>
+                                }
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person me-2"></i>Profile &amp; settings</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="btn btn-soft" asp-controller="Account" asp-action="Login">Log in</a>
+                        <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Join</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        @if (hasFlash)
+        {
+            <div class="container pt-3">
+                <partial name="_Flash" />
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <a class="brand mb-3" asp-controller="Home" asp-action="Index">
+                        <img src="~/images/logo-mark.svg" alt="" />
+                        <span class="brand-name">Artisan<span>Hub</span></span>
+                    </a>
+                    <p class="mb-0 pe-lg-5">A marketplace only for local handmade goods and custom art. Every artist is verified, and every order goes straight to the person who made it.</p>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6>Shop</h6>
+                    <ul class="list-unstyled d-grid gap-2 mb-0">
+                        <li><a asp-controller="Products" asp-action="Index">All products</a></li>
+                        <li><a asp-controller="Products" asp-action="Index" asp-route-customOnly="true">Made to order</a></li>
+                        <li><a asp-controller="Stores" asp-action="Index">Meet the artists</a></li>
+                        <li><a asp-controller="Requests" asp-action="Create">Request a custom piece</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6>Sell</h6>
+                    <ul class="list-unstyled d-grid gap-2 mb-0">
+                        <li><a asp-controller="Account" asp-action="Register" asp-route-type="Artist">Open a store</a></li>
+                        <li><a asp-controller="Seller" asp-action="Dashboard">Seller panel</a></li>
+                        <li><a asp-controller="Home" asp-action="About">How it works</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6>About this project</h6>
+                    <p class="mb-2">DBMS course project, BS Computer Science, Iqra University.</p>
+                    <p class="mb-0">Built with ASP.NET Core MVC and Microsoft SQL Server by Harees Ahmed and Zeeshan Wazir.</p>
+                </div>
+            </div>
+            <div class="bottom d-flex flex-wrap justify-content-between gap-2">
+                <span>&copy; @DateTime.Now.Year ArtisanHub. All rights reserved.</span>
+                <span>Made with care for local makers</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

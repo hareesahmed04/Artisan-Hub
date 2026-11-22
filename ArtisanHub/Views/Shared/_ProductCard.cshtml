@@ -1,0 +1,35 @@
+@model ProductCardVm
+<div class="p-card">
+    <a class="thumb" asp-controller="Products" asp-action="Details" asp-route-id="@Model.ProductID">
+        <img src="@Model.ImageUrl" alt="@Model.Title" loading="lazy" />
+        <div class="tags">
+            @if (Model.IsCustomizable)
+            {
+                <span class="tag tag-terra"><i class="bi bi-brush"></i> Custom orders</span>
+            }
+            @if (Model.StockQty == 0)
+            {
+                <span class="tag">Sold out</span>
+            }
+            else if (Model.StockQty <= 3)
+            {
+                <span class="tag tag-gold">Only @Model.StockQty left</span>
+            }
+        </div>
+    </a>
+    <div class="body">
+        <div class="maker">
+            <a asp-controller="Stores" asp-action="Details" asp-route-id="@Model.ArtistID">@Model.StoreName</a>
+            <span>&middot; @Model.CityName</span>
+        </div>
+        <div class="title"><a asp-controller="Products" asp-action="Details" asp-route-id="@Model.ProductID">@Model.Title</a></div>
+        <div class="stars">
+            @foreach (var star in Fmt.Stars(Model.AvgRating))
+            {
+                <i class="bi @star"></i>
+            }
+            <span class="num">@(Model.ReviewCount > 0 ? Fmt.Rating(Model.AvgRating) + " (" + Model.ReviewCount + ")" : "No reviews yet")</span>
+        </div>
+        <div class="price">@Fmt.Money(Model.Price)</div>
+    </div>
+</div>

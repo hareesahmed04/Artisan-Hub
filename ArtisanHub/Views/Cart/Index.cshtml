@@ -1,0 +1,86 @@
+@model CartVm
+@{
+    ViewData["Title"] = "Your cart";
+}
+<div class="container">
+    <div class="page-head">
+        <h1>Your cart</h1>
+        <p class="text-muted mb-0 mt-1">@Model.ItemCount @(Model.ItemCount == 1 ? "item" : "items") from @Model.Groups.Count @(Model.Groups.Count == 1 ? "artist" : "artists")</p>
+    </div>
+
+    @if (Model.IsEmpty)
+    {
+        <div class="empty-state card-soft">
+            <i class="bi bi-bag"></i>
+            <h5 class="text-body">Your cart is empty</h5>
+            <p>Find something beautiful made by a local artist.</p>
+            <a class="btn btn-primary" asp-controller="Products" asp-action="Index">Start shopping</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-lg-8">
+                @foreach (var g in Model.Groups)
+                {
+                    <div class="cart-group">
+                        <div class="group-head">
+                            <span><i class="bi bi-shop text-terra me-2"></i><a class="text-reset" asp-controller="Stores" asp-action="Details" asp-route-id="@g.ArtistID">@g.StoreName</a> <span class="text-muted fw-normal small">&middot; ships from @g.CityName</span></span>
+                            <span class="small text-muted fw-semibold">Parcel subtotal @Fmt.Money(g.Subtotal)</span>
+                        </div>
+                        @foreach (var line in g.Lines)
+                        {
+                            <div class="cart-line flex-wrap">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@line.ProductID"><img src="@line.ImageUrl" alt="@line.Title" /></a>
+                                <div class="flex-grow-1" style="min-width:180px">
+                                    <a class="fw-bold text-reset" asp-controller="Products" asp-action="Details" asp-route-id="@line.ProductID">@line.Title</a>
+                                    <div class="small text-muted">@Fmt.Money(line.Price) each</div>
+                                    @if (!line.Available)
+                                    {
+                                        <div class="small text-danger mt-1"><i class="bi bi-exclamation-circle me-1"></i>No longer available. Please remove it.</div>
+                                    }
+                                    else if (line.Quantity > line.StockQty)
+                                    {
+                                        <div class="small text-danger mt-1"><i class="bi bi-exclamation-circle me-1"></i>Only @line.StockQty left. Please lower the quantity.</div>
+                                    }
+                                </div>
+                                <form asp-action="Update" method="post" class="d-flex align-items-center">
+                                    <input type="hidden" name="productId" value="@line.ProductID" />
+                                    <div class="input-group input-group-sm qty-input" data-qty data-autosubmit>
+                                        <button class="btn btn-soft" type="button" data-step="-1" aria-label="Less">&minus;</button>
+                                        <input class="form-control" type="number" name="quantity" value="@line.Quantity" min="0" max="@Math.Max(1, line.StockQty)" aria-label="Quantity" onchange="this.form.submit()" />
+                                        <button class="btn btn-soft" type="button" data-step="1" aria-label="More">+</button>
+                                    </div>
+                                </form>
+                                <div class="fw-bold text-end" style="min-width:110px">@Fmt.Money(line.LineTotal)</div>
+                                <form asp-action="Remove" method="post">
+                                    <input type="hidden" name="productId" value="@line.ProductID" />
+                                    <button class="btn btn-link text-muted p-1" type="submit" title="Remove" aria-label="Remove"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+                <a class="btn btn-soft" asp-controller="Products" asp-action="Index"><i class="bi bi-arrow-left me-1"></i> Continue shopping</a>
+            </div>
+            <div class="col-lg-4">
+                <div class="summary-card">
+                    <h5 class="mb-3">Order summary</h5>
+                    <div class="summary-row"><span class="text-muted">Items (@Model.ItemCount)</span><span>@Fmt.Money(Model.ItemsTotal)</span></div>
+                    <div class="summary-row"><span class="text-muted">Delivery (@Model.Groups.Count @(Model.Groups.Count == 1 ? "parcel" : "parcels") &times; Rs. 250)</span><span>@Fmt.Money(Model.Shipping)</span></div>
+                    <div class="summary-row summary-total"><span>Total</span><span>@Fmt.Money(Model.Total)</span></div>
+                    @if (Model.HasProblems)
+                    {
+                        <div class="flash flash-error mt-3 mb-0 small"><i class="bi bi-exclamation-triangle-fill"></i><div>Fix the items marked in red before checking out.</div></div>
+                        <button class="btn btn-primary btn-lg w-100 mt-3" disabled>Checkout</button>
+                    }
+                    else
+                    {
+                        <a class="btn btn-primary btn-lg w-100 mt-3" asp-controller="Checkout" asp-action="Index">Checkout <i class="bi bi-arrow-right ms-1"></i></a>
+                    }
+                    <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Each artist packs and ships their own items, so delivery is charged per artist.</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

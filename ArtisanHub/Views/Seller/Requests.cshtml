@@ -1,0 +1,65 @@
+@model List<CustomRequest>
+@{
+    ViewData["Title"] = "Custom requests";
+}
+
+@if (Model.Count == 0)
+{
+    <div class="panel-card empty-state"><i class="bi bi-brush"></i>No custom requests yet. Customers can send you one from your store page.</div>
+}
+
+<div class="row g-4">
+    @foreach (var r in Model)
+    {
+        <div class="col-xl-6">
+            <div class="panel-card h-100 d-flex flex-column">
+                <div class="card-head">
+                    <div>
+                        <h5>@r.User.FullName</h5>
+                        <div class="small text-muted">@(Fmt.Date(r.CreatedAt) + (r.Category != null ? " · " + r.Category.CategoryName : ""))</div>
+                    </div>
+                    <span class="pill @Fmt.StatusClass(r.Status)">@r.Status</span>
+                </div>
+                <div class="card-pad d-flex flex-column flex-grow-1">
+                    <p style="white-space:pre-line">@r.Description</p>
+                    <div class="row g-2 small mb-3">
+                        <div class="col-4"><div class="maker-box"><div class="text-muted">Budget</div><div class="fw-bold">@Fmt.Money(r.Budget)</div></div></div>
+                        <div class="col-4"><div class="maker-box"><div class="text-muted">Needed by</div><div class="fw-bold">@Fmt.Date(r.RequiredBy)</div></div></div>
+                        <div class="col-4"><div class="maker-box"><div class="text-muted">Your quote</div><div class="fw-bold text-terra">@Fmt.Money(r.QuotedPrice)</div></div></div>
+                    </div>
+                    <div class="mt-auto">
+                        @if (r.Status == RequestStatus.Pending || r.Status == RequestStatus.Quoted)
+                        {
+                            <form asp-action="QuoteRequest" method="post" class="d-flex gap-2 mb-2">
+                                <input type="hidden" name="id" value="@r.RequestID" />
+                                <div class="input-group">
+                                    <span class="input-group-text">Rs.</span>
+                                    <input class="form-control" type="number" name="quotedPrice" min="1" step="50" value="@r.QuotedPrice" placeholder="Your price" required />
+                                </div>
+                                <button class="btn btn-primary text-nowrap" type="submit">@(r.Status == RequestStatus.Quoted ? "Update quote" : "Send quote")</button>
+                            </form>
+                            <form asp-action="RejectRequest" method="post" data-confirm="Decline this request?">
+                                <input type="hidden" name="id" value="@r.RequestID" />
+                                <button class="btn btn-link btn-sm text-muted p-0" type="submit">Decline request</button>
+                            </form>
+                        }
+                        else if (r.Status == RequestStatus.Accepted)
+                        {
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <span class="small text-olive fw-semibold"><i class="bi bi-hand-thumbs-up me-1"></i>Customer accepted your quote. Contact: @r.User.Email</span>
+                                <form asp-action="CompleteRequest" method="post">
+                                    <input type="hidden" name="id" value="@r.RequestID" />
+                                    <button class="btn btn-olive btn-sm text-nowrap" type="submit">Mark completed</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="small text-muted">No action needed.</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

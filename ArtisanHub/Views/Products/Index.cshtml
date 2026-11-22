@@ -1,0 +1,140 @@
+@model ProductListVm
+@{
+    var heading = Model.CategoryName ?? (string.IsNullOrWhiteSpace(Model.Q) ? "All handmade products" : $"Results for \"{Model.Q}\"");
+    ViewData["Title"] = Model.CategoryName ?? "Shop";
+    var sorts = new Dictionary<string, string>
+    {
+        ["newest"] = "Newest first",
+        ["popular"] = "Most popular",
+        ["rating"] = "Top rated",
+        ["price-asc"] = "Price: low to high",
+        ["price-desc"] = "Price: high to low"
+    };
+    string PageUrl(int page) => Url.Action("Index", new { q = Model.Q, category = Model.Category, city = Model.City, min = Model.Min, max = Model.Max, customOnly = Model.CustomOnly ? true : (bool?)null, sort = Model.Sort, page })!;
+}
+
+<div class="container">
+    <div class="page-head">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Shop</li>
+            </ol>
+        </nav>
+        <h1>@heading</h1>
+        <p class="text-muted mb-0 mt-1">@Model.TotalCount @(Model.TotalCount == 1 ? "item" : "items") from verified local artists</p>
+    </div>
+
+    <form method="get" asp-action="Index">
+        <div class="row g-4">
+            <aside class="col-lg-3">
+                <div class="filter-card">
+                    <h6>Search</h6>
+                    <input class="form-control" type="search" name="q" value="@Model.Q" placeholder="Vase, shawl, ring..." />
+
+                    <h6>Category</h6>
+                    <div class="d-grid gap-1">
+                        <label class="cat-link @(Model.Category == null ? "active" : "")">
+                            <input class="d-none" type="radio" name="category" value="" checked="@(Model.Category == null)" onchange="this.form.submit()" />
+                            <span>All categories</span>
+                        </label>
+                        @foreach (var c in Model.Categories)
+                        {
+                            <label class="cat-link @(Model.Category == c.CategoryID ? "active" : "")">
+                                <input class="d-none" type="radio" name="category" value="@c.CategoryID" checked="@(Model.Category == c.CategoryID)" onchange="this.form.submit()" />
+                                <span><i class="bi @Fmt.CategoryIcon(c.CategoryID) me-2 text-terra"></i>@c.CategoryName</span>
+                            </label>
+                        }
+                    </div>
+
+                    <h6>Artist's city</h6>
+                    <select class="form-select" name="city" data-autosubmit>
+                        <option value="">All cities</option>
+                        @foreach (var city in Model.Cities)
+                        {
+                            <option value="@city.CityID" selected="@(Model.City == city.CityID)">@city.CityName</option>
+                        }
+                    </select>
+
+                    <h6>Price (Rs.)</h6>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input class="form-control" type="number" name="min" min="0" step="100" value="@Model.Min" placeholder="Min" />
+                        <span class="text-muted">&ndash;</span>
+                        <input class="form-control" type="number" name="max" min="0" step="100" value="@Model.Max" placeholder="Max" />
+                    </div>
+
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="customOnly" name="customOnly" value="true" checked="@Model.CustomOnly" onchange="this.form.submit()" />
+                        <label class="form-check-label" for="customOnly">Takes custom orders</label>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button class="btn btn-primary" type="submit">Apply filters</button>
+                        <a class="btn btn-soft" asp-action="Index">Clear all</a>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (!string.IsNullOrWhiteSpace(Model.Q))
+                        {
+                            <span class="tag tag-gold">Search: @Model.Q</span>
+                        }
+                        @if (Model.CustomOnly)
+                        {
+                            <span class="tag tag-terra">Custom orders</span>
+                        }
+                        @if (Model.Min.HasValue || Model.Max.HasValue)
+                        {
+                            <span class="tag tag-gold">@(Model.Min.HasValue ? Fmt.Money(Model.Min.Value) : "Rs. 0") &ndash; @(Model.Max.HasValue ? Fmt.Money(Model.Max.Value) : "any")</span>
+                        }
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="text-muted small text-nowrap" for="sort">Sort by</label>
+                        <select class="form-select form-select-sm" id="sort" name="sort" data-autosubmit style="min-width:190px">
+                            @foreach (var s in sorts)
+                            {
+                                <option value="@s.Key" selected="@(Model.Sort == s.Key)">@s.Value</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                @if (Model.Products.Count == 0)
+                {
+                    <div class="empty-state card-soft">
+                        <i class="bi bi-search"></i>
+                        <h5 class="text-body">No products match these filters</h5>
+                        <p>Try a different search or clear the filters.</p>
+                        <a class="btn btn-primary" asp-action="Index">Show everything</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3 g-lg-4">
+                        @foreach (var p in Model.Products)
+                        {
+                            <div class="col-6 col-md-4"><partial name="_ProductCard" model="p" /></div>
+                        }
+                    </div>
+
+                    if (Model.TotalPages > 1)
+                    {
+                        <nav class="mt-5" aria-label="Pages">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item @(Model.Page == 1 ? "disabled" : "")"><a class="page-link" href="@PageUrl(Model.Page - 1)">&laquo;</a></li>
+                                @for (var i = 1; i <= Model.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == Model.Page ? "active" : "")"><a class="page-link" href="@PageUrl(i)">@i</a></li>
+                                }
+                                <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")"><a class="page-link" href="@PageUrl(Model.Page + 1)">&raquo;</a></li>
+                            </ul>
+                        </nav>
+                    }
+                }
+            </div>
+        </div>
+    </form>
+</div>

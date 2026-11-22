@@ -1,0 +1,92 @@
+@model List<SellerShipmentVm>
+@{
+    ViewData["Title"] = "Orders & shipping";
+    var current = ViewData["Status"] as string;
+    var filters = new[] { ("", "All"), ("Preparing", "To ship"), ("Shipped", "Shipped"), ("Delivered", "Delivered") };
+    var couriers = new[] { "TCS", "Leopards Courier", "M&P", "PostEx", "Trax", "Pakistan Post" };
+}
+
+<ul class="nav nav-pills gap-1 mb-4">
+    @foreach (var (value, label) in filters)
+    {
+        <li class="nav-item">
+            <a class="nav-link @((current ?? "") == value ? "active" : "")" asp-action="Orders" asp-route-status="@(value == "" ? null : value)">@label</a>
+        </li>
+    }
+</ul>
+
+@if (Model.Count == 0)
+{
+    <div class="panel-card empty-state"><i class="bi bi-inbox"></i>No orders in this list.</div>
+}
+
+@foreach (var s in Model)
+{
+    <div class="panel-card mb-4">
+        <div class="card-head flex-wrap">
+            <div>
+                <h5>Order #@s.OrderID <span class="pill @Fmt.StatusClass(s.Status) ms-2">@s.Status</span></h5>
+                <div class="small text-muted mt-1">Placed @Fmt.DateTimeText(s.OrderDate) &middot; @PaymentMethod.Label(s.Method) (@s.PaymentState)</div>
+            </div>
+            <div class="fw-bold fs-5">@Fmt.Money(s.Subtotal)</div>
+        </div>
+        <div class="row g-0">
+            <div class="col-lg-7 border-end">
+                @foreach (var l in s.Lines)
+                {
+                    <div class="item-row">
+                        <img src="@l.ImageUrl" alt="" />
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">@l.Title</div>
+                            <div class="small text-muted">@Fmt.Money(l.UnitPrice) &times; @l.Quantity</div>
+                        </div>
+                        <div class="fw-semibold">@Fmt.Money(l.UnitPrice * l.Quantity)</div>
+                    </div>
+                }
+                <div class="card-pad border-top">
+                    <div class="small-caps text-muted mb-1">Ship to</div>
+                    <div class="fw-semibold">@s.CustomerName @(s.CustomerPhone != null ? "· " + s.CustomerPhone : "")</div>
+                    <div class="text-muted">@s.AddressLine, @s.CityName @s.PostalCode</div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card-pad">
+                    <div class="small-caps text-muted mb-2">Update shipment</div>
+                    <form asp-action="UpdateShipment" method="post">
+                        <input type="hidden" name="shipmentId" value="@s.ShipmentID" />
+                        <input type="hidden" name="returnStatus" value="@current" />
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="courier-@s.ShipmentID">Courier</label>
+                            <input class="form-control" id="courier-@s.ShipmentID" name="courierName" value="@s.CourierName" list="courierList" placeholder="e.g. TCS" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="tracking-@s.ShipmentID">Tracking number</label>
+                            <input class="form-control" id="tracking-@s.ShipmentID" name="trackingNo" value="@s.TrackingNo" placeholder="e.g. TCS-77120345" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small mb-1" for="status-@s.ShipmentID">Status</label>
+                            <select class="form-select" id="status-@s.ShipmentID" name="status">
+                                @foreach (var st in ShipmentStatus.All)
+                                {
+                                    <option value="@st" selected="@(s.Status == st)">@st</option>
+                                }
+                            </select>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Save shipment</button>
+                    </form>
+                    @if (s.ShippedAt.HasValue)
+                    {
+                        <div class="small text-muted mt-2">@("Shipped " + Fmt.Date(s.ShippedAt) + (s.DeliveredAt.HasValue ? " · Delivered " + Fmt.Date(s.DeliveredAt) : ""))</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<datalist id="courierList">
+    @foreach (var c in couriers)
+    {
+        <option value="@c"></option>
+    }
+</datalist>

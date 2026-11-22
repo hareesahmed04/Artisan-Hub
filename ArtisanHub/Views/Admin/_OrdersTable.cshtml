@@ -1,0 +1,29 @@
+@model List<AdminOrderRowVm>
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-receipt"></i>No orders to show.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr><th>Order</th><th>Customer</th><th class="text-center">Items</th><th class="text-center">Parcels</th><th>Payment</th><th class="text-end">Total</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    <tr>
+                        <td><div class="fw-bold">#@o.OrderID</div><div class="small text-muted">@Fmt.Date(o.OrderDate)</div></td>
+                        <td>@o.CustomerName</td>
+                        <td class="text-center">@o.ItemCount</td>
+                        <td class="text-center">@o.ShipmentCount</td>
+                        <td class="small">@PaymentMethod.Label(o.Method)<div><span class="pill @Fmt.StatusClass(o.PaymentState)">@o.PaymentState</span></div></td>
+                        <td class="text-end fw-semibold">@Fmt.Money(o.Total)</td>
+                        <td><span class="pill @Fmt.StatusClass(o.Status)">@o.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

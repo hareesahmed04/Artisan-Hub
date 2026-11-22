@@ -1,0 +1,193 @@
+@model HomeVm
+@{
+    ViewData["Title"] = null;
+}
+
+<section class="hero">
+    <div class="container py-5">
+        <div class="row align-items-center g-5 py-lg-4">
+            <div class="col-lg-7">
+                <div class="eyebrow mb-3">Local &middot; Handmade &middot; One of a kind</div>
+                <h1 class="mb-3">Handmade by local artists, <em>made for you.</em></h1>
+                <p class="lead mb-4">Pottery from Karachi, embroidery from Hyderabad, carved walnut from Peshawar. Buy directly from verified makers, or ask them to create something just for you.</p>
+
+                <form class="hero-search d-flex mb-4" asp-controller="Products" asp-action="Index" method="get">
+                    <input class="form-control" type="search" name="q" placeholder="What are you looking for?" aria-label="Search" />
+                    <button class="btn btn-primary px-4" type="submit"><i class="bi bi-search me-1"></i> Search</button>
+                </form>
+
+                <div class="hero-actions d-flex flex-wrap gap-2 mb-4">
+                    <a class="btn btn-dark btn-lg" asp-controller="Products" asp-action="Index">Shop handmade</a>
+                    <a class="btn btn-outline-primary btn-lg" asp-controller="Requests" asp-action="Create"><i class="bi bi-brush me-1"></i> Request a custom piece</a>
+                </div>
+
+                <div class="hero-stats d-flex gap-4 gap-md-5">
+                    <div><div class="num">@Model.ProductCount</div><div class="lbl">handmade items</div></div>
+                    <div><div class="num">@Model.ArtistCount</div><div class="lbl">verified artists</div></div>
+                    <div><div class="num">@Model.CityCount</div><div class="lbl">cities</div></div>
+                </div>
+            </div>
+            <div class="col-lg-5 hero-art-wrap">
+                <img class="hero-art" src="~/images/hero.svg" alt="Handmade terracotta vase, brass lantern and embroidered cushion" width="560" height="525" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <div class="eyebrow">Browse by craft</div>
+                <h2>Shop by category</h2>
+            </div>
+            <a class="btn btn-soft" asp-controller="Products" asp-action="Index">All products <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-3 g-lg-4">
+            @foreach (var c in Model.Categories)
+            {
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a class="cat-tile" asp-controller="Products" asp-action="Index" asp-route-category="@c.CategoryID">
+                        <img src="@Fmt.CategoryImage(c.CategoryID)" alt="@c.CategoryName" loading="lazy" />
+                        <div class="body">
+                            <div class="name">@c.CategoryName</div>
+                            <div class="count">@Fmt.Plural(c.ProductCount, "item")</div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="section pt-0">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <div class="eyebrow">Fresh from the studio</div>
+                <h2>New arrivals</h2>
+            </div>
+            <a class="btn btn-soft" asp-controller="Products" asp-action="Index" asp-route-sort="newest">See more <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        @if (Model.NewArrivals.Count == 0)
+        {
+            <div class="empty-state card-soft"><i class="bi bi-box-seam"></i>No products yet. Check back soon!</div>
+        }
+        else
+        {
+            <div class="row g-3 g-lg-4">
+                @foreach (var p in Model.NewArrivals)
+                {
+                    <div class="col-6 col-md-4 col-lg-3"><partial name="_ProductCard" model="p" /></div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section class="section bg-sand">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="eyebrow">Simple and personal</div>
+            <h2>How ArtisanHub works</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="icon"><i class="bi bi-search-heart"></i></div>
+                    <h5>Discover local makers</h5>
+                    <p class="text-muted mb-0">Browse by craft or city. Every store belongs to a real artist that our team has verified.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="icon"><i class="bi bi-brush"></i></div>
+                    <h5>Buy or request custom</h5>
+                    <p class="text-muted mb-0">Order ready-made pieces, or describe your idea and get a personal quote from the artist.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="icon"><i class="bi bi-truck"></i></div>
+                    <h5>Track every parcel</h5>
+                    <p class="text-muted mb-0">Each artist ships their own items and adds a tracking number, so you always know where your order is.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Model.Makers.Count > 0)
+{
+    <section class="section">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <div class="eyebrow">The people behind the pieces</div>
+                    <h2>Meet the makers</h2>
+                </div>
+                <a class="btn btn-soft" asp-controller="Stores" asp-action="Index">All artists <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+            <div class="row g-3 g-lg-4">
+                @foreach (var s in Model.Makers)
+                {
+                    <div class="col-md-6 col-lg-3"><partial name="_StoreCard" model="s" /></div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (Model.TopRated.Count > 0)
+{
+    <section class="section pt-0">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <div class="eyebrow">Loved by customers</div>
+                    <h2>Top rated</h2>
+                </div>
+                <a class="btn btn-soft" asp-controller="Products" asp-action="Index" asp-route-sort="rating">See more <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+            <div class="row g-3 g-lg-4">
+                @foreach (var p in Model.TopRated)
+                {
+                    <div class="col-6 col-md-4 col-lg-3"><partial name="_ProductCard" model="p" /></div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<section class="section pt-0">
+    <div class="container">
+        <div class="cta-band">
+            <div class="row align-items-center g-4 position-relative" style="z-index:1">
+                <div class="col-lg-8">
+                    <div class="eyebrow mb-2" style="color:#F3D9A4">For artists and crafters</div>
+                    <h2 class="mb-2">Turn your craft into a small business</h2>
+                    <p class="mb-0">Open a free store, list your work in minutes and receive custom orders from customers in your city and beyond.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Register" asp-route-type="Artist">Open your store</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Model.Cities.Count > 0)
+{
+    <section class="section pt-0">
+        <div class="container text-center">
+            <div class="eyebrow">Shop local</div>
+            <h2 class="mb-4">Find makers near you</h2>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                @foreach (var city in Model.Cities)
+                {
+                    <a class="city-chip" asp-controller="Products" asp-action="Index" asp-route-city="@city.CityID"><i class="bi bi-geo-alt text-terra"></i>@city.CityName</a>
+                }
+            </div>
+        </div>
+    </section>
+}

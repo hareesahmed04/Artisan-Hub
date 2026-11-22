@@ -1,0 +1,63 @@
+@model AdminReportsVm
+@{
+    ViewData["Title"] = "Reports";
+    var maxArtist = Model.ByArtist.Count > 0 ? Model.ByArtist.Max(x => x.TotalSales) : 0;
+    var maxCategory = Model.ByCategory.Count > 0 ? Model.ByCategory.Max(x => x.TotalSales) : 0;
+    var maxCity = Model.ByCity.Count > 0 ? Model.ByCity.Max(x => x.TotalSales) : 0;
+}
+@functions {
+    private static int Pct(decimal value, decimal max) => max == 0 ? 0 : (int)(value / max * 100);
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="stat-card"><div class="label">Total item sales</div><div class="value">@Fmt.Money(Model.GrandTotal)</div><div class="small text-muted">excluding delivery and cancelled orders</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="label">Items sold</div><div class="value">@Model.ItemsSold</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="label">Selling artists</div><div class="value">@(Model.ByArtist.Count(a => a.TotalSales > 0))</div></div></div>
+</div>
+
+<div class="panel-card mb-4">
+    <div class="card-head"><h5>Sales by artist</h5><span class="small text-muted">SQL view: vw_SalesByArtist</span></div>
+    <div class="card-pad">
+        @foreach (var a in Model.ByArtist)
+        {
+            <div class="bar-row">
+                <div class="bar-label">@a.StoreName <span class="text-muted fw-normal small">&middot; @a.CityName</span></div>
+                <div class="bar-track"><div class="bar-fill" style="width:@(Pct(a.TotalSales, maxArtist))%"></div></div>
+                <div class="bar-value">@Fmt.Money(a.TotalSales) <span class="text-muted fw-normal small">(@a.ItemsSold)</span></div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <div class="panel-card h-100">
+            <div class="card-head"><h5>Sales by category</h5><span class="small text-muted">vw_SalesByCategory</span></div>
+            <div class="card-pad">
+                @foreach (var c in Model.ByCategory)
+                {
+                    <div class="bar-row">
+                        <div class="bar-label">@c.CategoryName</div>
+                        <div class="bar-track"><div class="bar-fill olive" style="width:@(Pct(c.TotalSales, maxCategory))%"></div></div>
+                        <div class="bar-value">@Fmt.Money(c.TotalSales)</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="panel-card h-100">
+            <div class="card-head"><h5>Sales by city</h5><span class="small text-muted">vw_SalesByCity</span></div>
+            <div class="card-pad">
+                @foreach (var c in Model.ByCity)
+                {
+                    <div class="bar-row">
+                        <div class="bar-label">@c.CityName <span class="text-muted fw-normal small">&middot; @Fmt.Plural(c.ArtistCount, "artist")</span></div>
+                        <div class="bar-track"><div class="bar-fill gold" style="width:@(Pct(c.TotalSales, maxCity))%"></div></div>
+                        <div class="bar-value">@Fmt.Money(c.TotalSales)</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

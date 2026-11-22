@@ -1,0 +1,131 @@
+@model SellerDashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    var a = Model.Artist;
+}
+@section TopActions {
+    <a class="btn btn-primary btn-sm d-none d-sm-inline-block" asp-action="CreateProduct"><i class="bi bi-plus-lg me-1"></i> Add product</a>
+}
+
+<partial name="_VerifyBanner" model="a" />
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <span class="avatar" style="width:56px;height:56px;font-size:1.2rem">@Fmt.Initials(a.StoreName)</span>
+    <div>
+        <h2 class="mb-0" style="font-size:1.5rem">@a.StoreName</h2>
+        <div class="meta"><span><i class="bi bi-geo-alt"></i>@a.City.CityName</span><span><i class="bi bi-star-fill"></i>@Fmt.Rating(Model.AvgRating) (@Fmt.Plural(Model.ReviewCount, "review"))</span>
+            @if (a.IsVerified)
+            {
+                <a asp-controller="Stores" asp-action="Details" asp-route-id="@a.ArtistID"><i class="bi bi-box-arrow-up-right"></i>View public store</a>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">Sales this month</div><div class="icon icon-terra"><i class="bi bi-cash-coin"></i></div></div>
+            <div class="value">@Fmt.Money(Model.SalesThisMonth)</div>
+            <div class="small text-muted">@Fmt.Plural(Model.OrdersThisMonth, "order")</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">All-time sales</div><div class="icon icon-olive"><i class="bi bi-graph-up-arrow"></i></div></div>
+            <div class="value">@Fmt.Money(Model.TotalSales)</div>
+            <div class="small text-muted">excluding cancelled</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">To ship</div><div class="icon icon-gold"><i class="bi bi-truck"></i></div></div>
+            <div class="value">@Model.AwaitingShipment</div>
+            <div class="small text-muted">@(Model.AwaitingShipment == 1 ? "parcel" : "parcels") preparing</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">New requests</div><div class="icon icon-plum"><i class="bi bi-brush"></i></div></div>
+            <div class="value">@Model.PendingRequests</div>
+            <div class="small text-muted">@Fmt.Plural(Model.ActiveProducts, "product") listed</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xxl-8">
+        <div class="panel-card">
+            <div class="card-head">
+                <h5>Recent orders</h5>
+                <a class="btn btn-soft btn-sm" asp-action="Orders">All orders</a>
+            </div>
+            @if (Model.RecentShipments.Count == 0)
+            {
+                <div class="empty-state"><i class="bi bi-inbox"></i>No orders yet. They will appear here when customers buy your products.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th class="text-end">Your share</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var s in Model.RecentShipments)
+                            {
+                                <tr>
+                                    <td><div class="fw-bold">#@s.OrderID</div><div class="small text-muted">@Fmt.Date(s.OrderDate)</div></td>
+                                    <td>@s.CustomerName<div class="small text-muted">@s.CityName</div></td>
+                                    <td class="small wrap">@(string.Join(", ", s.Lines.Select(l => l.Title + " × " + l.Quantity)))</td>
+                                    <td class="text-end fw-semibold">@Fmt.Money(s.Subtotal)</td>
+                                    <td><span class="pill @Fmt.StatusClass(s.Status)">@s.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-xxl-4">
+      <div class="row g-4">
+      <div class="col-md-6 col-xxl-12">
+        <div class="panel-card h-100">
+            <div class="card-head">
+                <h5><i class="bi bi-exclamation-diamond text-terra me-1"></i>Low stock</h5>
+                <a class="btn btn-soft btn-sm" asp-action="Products">Products</a>
+            </div>
+            <div class="card-pad">
+                @if (Model.LowStock.Count == 0)
+                {
+                    <p class="text-muted mb-0">All your products have healthy stock.</p>
+                }
+                else
+                {
+                    <div class="d-grid gap-2">
+                        @foreach (var p in Model.LowStock)
+                        {
+                            <a class="d-flex justify-content-between align-items-center text-reset" asp-action="EditProduct" asp-route-id="@p.ProductID">
+                                <span class="fw-semibold">@p.Title</span>
+                                <span class="pill @(p.StockQty == 0 ? "pill-stop" : "pill-pending")">@p.StockQty left</span>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-xxl-12">
+        <div class="panel-card h-100">
+            <div class="card-head"><h5><i class="bi bi-lightning-charge text-terra me-1"></i>Quick actions</h5></div>
+            <div class="card-pad">
+                <div class="d-grid gap-2">
+                    <a class="btn btn-primary" asp-action="CreateProduct"><i class="bi bi-plus-lg me-1"></i> Add a product</a>
+                    <a class="btn btn-soft" asp-action="Orders" asp-route-status="Preparing"><i class="bi bi-truck me-1"></i> Ship waiting parcels</a>
+                    <a class="btn btn-soft" asp-action="Requests"><i class="bi bi-brush me-1"></i> Answer custom requests</a>
+                </div>
+            </div>
+        </div>
+      </div>
+      </div>
+    </div>
+</div>

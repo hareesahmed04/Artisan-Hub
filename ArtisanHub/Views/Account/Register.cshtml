@@ -1,0 +1,99 @@
+@model RegisterVm
+@{
+    ViewData["Title"] = "Create an account";
+}
+<div class="auth-wrap">
+    <div class="container">
+        <div class="auth-card mx-auto" style="max-width:1040px">
+            <div class="row g-0">
+                <div class="col-lg-5">
+                    <div class="auth-side d-flex flex-column">
+                        <img src="~/images/logo-mark.svg" alt="" width="56" class="mb-4" />
+                        <h2 class="mb-3">Join ArtisanHub</h2>
+                        <ul class="list-unstyled d-grid gap-3 mb-4">
+                            <li><i class="bi bi-check2-circle me-2 text-warning"></i>Buy directly from local makers</li>
+                            <li><i class="bi bi-check2-circle me-2 text-warning"></i>Ask artists for custom pieces</li>
+                            <li><i class="bi bi-check2-circle me-2 text-warning"></i>Artists: open a free store and get verified</li>
+                        </ul>
+                        <img src="~/images/products/p5.svg" alt="" class="rounded-4 mt-auto" style="max-width:230px;opacity:.95" />
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="auth-form">
+                        <h3 class="mb-1">Create your account</h3>
+                        <p class="text-muted mb-4">Already a member? <a asp-action="Login">Log in</a></p>
+
+                        <form asp-action="Register" method="post" novalidate>
+                            <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+
+                            <label class="form-label">I want to</label>
+                            <div class="account-type mb-4">
+                                <label class="choice">
+                                    <input class="form-check-input" type="radio" asp-for="AccountType" value="Customer" data-toggle-target="#artistFields" data-toggle-value="Artist" />
+                                    <span><span class="fw-bold d-block">Shop</span><span class="small text-muted">Buy handmade and request custom pieces</span></span>
+                                </label>
+                                <label class="choice">
+                                    <input class="form-check-input" type="radio" asp-for="AccountType" value="Artist" />
+                                    <span><span class="fw-bold d-block">Sell my work</span><span class="small text-muted">Open a store as an artist</span></span>
+                                </label>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="FullName" class="form-label"></label>
+                                    <input asp-for="FullName" class="form-control" autocomplete="name" />
+                                    <span asp-validation-for="FullName" class="field-validation-error"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Phone" class="form-label"></label>
+                                    <input asp-for="Phone" class="form-control" placeholder="03xx-xxxxxxx" autocomplete="tel" />
+                                    <span asp-validation-for="Phone" class="field-validation-error"></span>
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="Email" class="form-label"></label>
+                                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                                    <span asp-validation-for="Email" class="field-validation-error"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Password" class="form-label"></label>
+                                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                                    <span asp-validation-for="Password" class="field-validation-error"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                                    <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+                                </div>
+                            </div>
+
+                            <div id="artistFields" class="mt-4 p-3 rounded-4 bg-sand">
+                                <div class="small-caps text-terra mb-2">Your store</div>
+                                <div class="row g-3">
+                                    <div class="col-md-7">
+                                        <label asp-for="StoreName" class="form-label"></label>
+                                        <input asp-for="StoreName" class="form-control" placeholder="e.g. Clay & Kiln Studio" />
+                                        <span asp-validation-for="StoreName" class="field-validation-error"></span>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label asp-for="CityID" class="form-label"></label>
+                                        <select asp-for="CityID" asp-items="Model.Cities" class="form-select">
+                                            <option value="">Choose city</option>
+                                        </select>
+                                        <span asp-validation-for="CityID" class="field-validation-error"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="Bio" class="form-label"></label>
+                                        <textarea asp-for="Bio" class="form-control" rows="3" placeholder="Tell customers about your craft, materials and experience"></textarea>
+                                    </div>
+                                </div>
+                                <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Your products appear in the shop after the admin verifies your store.</p>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Create account</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

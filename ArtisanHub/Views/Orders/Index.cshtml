@@ -1,0 +1,58 @@
+@model List<OrderListItemVm>
+@{
+    ViewData["Title"] = "My orders";
+}
+<div class="container">
+    <div class="page-head d-flex justify-content-between align-items-end flex-wrap gap-2">
+        <div>
+            <h1>My orders</h1>
+            <p class="text-muted mb-0 mt-1">Track parcels, cancel before shipping and review items you have received.</p>
+        </div>
+        <a class="btn btn-soft" asp-controller="Products" asp-action="Index"><i class="bi bi-bag me-1"></i> Keep shopping</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state card-soft">
+            <i class="bi bi-receipt"></i>
+            <h5 class="text-body">No orders yet</h5>
+            <p>When you place an order it will appear here.</p>
+            <a class="btn btn-primary" asp-controller="Products" asp-action="Index">Browse the shop</a>
+        </div>
+    }
+    else
+    {
+        foreach (var o in Model)
+        {
+            <a class="order-card d-block text-reset" asp-action="Details" asp-route-id="@o.OrderID" style="text-decoration:none">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-3">
+                        <div class="small text-muted">Order</div>
+                        <div class="fw-bold fs-5">#@o.OrderID</div>
+                        <div class="small text-muted">@Fmt.Date(o.OrderDate)</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="thumbs-row d-flex">
+                            @foreach (var t in o.Thumbnails)
+                            {
+                                <img src="@t" alt="" />
+                            }
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <div class="small text-muted">@o.ItemCount @(o.ItemCount == 1 ? "item" : "items")</div>
+                        <div class="fw-bold">@Fmt.Money(o.Total)</div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <div class="small text-muted">Payment</div>
+                        <div class="fw-semibold small">@PaymentMethod.Label(o.Method)</div>
+                    </div>
+                    <div class="col-md-2 text-md-end">
+                        <span class="pill @Fmt.StatusClass(o.Status)">@o.Status</span>
+                        <div class="small text-terra mt-2 fw-semibold">View details <i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </a>
+        }
+    }
+</div>

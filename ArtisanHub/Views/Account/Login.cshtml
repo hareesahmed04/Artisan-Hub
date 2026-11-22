@@ -1,0 +1,54 @@
+@model LoginVm
+@{
+    ViewData["Title"] = "Log in";
+}
+<div class="auth-wrap">
+    <div class="container">
+        <div class="auth-card mx-auto" style="max-width:980px">
+            <div class="row g-0">
+                <div class="col-lg-5">
+                    <div class="auth-side d-flex flex-column">
+                        <img src="~/images/logo-mark.svg" alt="" width="56" class="mb-4" />
+                        <h2 class="mb-3">Welcome back</h2>
+                        <p class="mb-4">Sign in to track your orders, talk to artists about custom pieces and manage your store.</p>
+                        <img src="~/images/products/p22.svg" alt="" class="rounded-4 mt-auto" style="max-width:220px;opacity:.95" />
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="auth-form">
+                        <h3 class="mb-1">Log in</h3>
+                        <p class="text-muted mb-4">New here? <a asp-action="Register">Create an account</a></p>
+
+                        <form asp-action="Login" method="post" novalidate>
+                            <input type="hidden" asp-for="ReturnUrl" />
+                            <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" placeholder="you@example.com" autocomplete="email" autofocus />
+                                <span asp-validation-for="Email" class="field-validation-error"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Password" class="form-label"></label>
+                                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                                <span asp-validation-for="Password" class="field-validation-error"></span>
+                            </div>
+                            <div class="form-check mb-4">
+                                <input asp-for="RememberMe" class="form-check-input" />
+                                <label asp-for="RememberMe" class="form-check-label"></label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100">Log in</button>
+                        </form>
+
+                        <div class="demo-logins mt-4">
+                            <div class="fw-bold mb-1"><i class="bi bi-key me-1"></i>Demo accounts</div>
+                            <div>Customer: <code>ayesha@example.com</code> / <code>Pass@123</code></div>
+                            <div>Artist: <code>sana@artisanhub.pk</code> / <code>Pass@123</code></div>
+                            <div>Admin: <code>admin@artisanhub.pk</code> / <code>Admin@123</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,102 @@
+@model AdminDashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    var maxCat = Model.CategorySales.Count > 0 ? Model.CategorySales.Max(c => c.TotalSales) : 0;
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">Revenue</div><div class="icon icon-terra"><i class="bi bi-cash-stack"></i></div></div>
+            <div class="value">@Fmt.Money(Model.Revenue)</div>
+            <div class="small text-muted">@Fmt.Money(Model.RevenueThisMonth) this month</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">Orders</div><div class="icon icon-olive"><i class="bi bi-receipt"></i></div></div>
+            <div class="value">@Model.Orders</div>
+            <div class="small text-muted">@Fmt.Plural(Model.OpenRequests, "open custom request")</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">Artists</div><div class="icon icon-gold"><i class="bi bi-patch-check"></i></div></div>
+            <div class="value">@Model.VerifiedArtists</div>
+            <div class="small text-muted">@Model.PendingArtists waiting for verification</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-top"><div class="label">Customers</div><div class="icon icon-plum"><i class="bi bi-people"></i></div></div>
+            <div class="value">@Model.Customers</div>
+            <div class="small text-muted">@Fmt.Plural(Model.ActiveProducts, "product") live</div>
+        </div>
+    </div>
+</div>
+
+@if (Model.ArtistsToVerify.Count > 0)
+{
+    <div class="panel-card mb-4">
+        <div class="card-head">
+            <h5><i class="bi bi-hourglass-split text-terra me-1"></i>Artists waiting for verification</h5>
+            <a class="btn btn-soft btn-sm" asp-action="Artists" asp-route-filter="pending">Review all</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <tbody>
+                    @foreach (var a in Model.ArtistsToVerify)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="avatar avatar-gold">@Fmt.Initials(a.StoreName)</span>
+                                    <div><div class="fw-bold">@a.StoreName</div><div class="small text-muted">@a.User.FullName &middot; @a.User.Email</div></div>
+                                </div>
+                            </td>
+                            <td class="small">@a.City.CityName</td>
+                            <td class="small text-muted">Applied @Fmt.Date(a.JoinDate)</td>
+                            <td class="text-end">
+                                <form asp-action="VerifyArtist" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@a.ArtistID" />
+                                    <input type="hidden" name="verify" value="true" />
+                                    <button class="btn btn-olive btn-sm" type="submit"><i class="bi bi-check2 me-1"></i>Verify</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-xxl-8">
+        <div class="panel-card">
+            <div class="card-head">
+                <h5>Latest orders</h5>
+                <a class="btn btn-soft btn-sm" asp-action="Orders">All orders</a>
+            </div>
+            <partial name="_OrdersTable" model="Model.RecentOrders" />
+        </div>
+    </div>
+    <div class="col-xxl-4">
+        <div class="panel-card h-100">
+            <div class="card-head">
+                <h5>Sales by category</h5>
+                <a class="btn btn-soft btn-sm" asp-action="Reports">Reports</a>
+            </div>
+            <div class="card-pad">
+                @foreach (var c in Model.CategorySales)
+                {
+                    var width = maxCat == 0 ? 0 : (int)(c.TotalSales / maxCat * 100);
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1"><span class="fw-semibold">@c.CategoryName</span><span class="fw-bold">@Fmt.Money(c.TotalSales)</span></div>
+                        <div class="bar-row p-0" style="grid-template-columns:1fr"><div class="bar-track"><div class="bar-fill olive" style="width:@(width)%"></div></div></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- .NET 8 target. RollForward lets it run on any newer .NET runtime (9, 10, ...). -->
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ArtisanHub</RootNamespace>
+    <AssemblyName>ArtisanHub</AssemblyName>
+    <!-- Keeps the app starting on Windows builds without full CET (shadow stack) support. -->
+    <CETCompat>false</CETCompat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+  </ItemGroup>
+
+  <!-- The database script is embedded so the app can build the database on first run. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Database\ArtisanHub_Database.sql" LogicalName="ArtisanHub.Database.sql" Link="Data\ArtisanHub_Database.sql" />
+  </ItemGroup>
+
+</Project>

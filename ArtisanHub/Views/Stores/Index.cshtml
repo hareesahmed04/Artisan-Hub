@@ -1,0 +1,48 @@
+@model StoreListVm
+@{
+    ViewData["Title"] = "Artists";
+}
+<div class="container">
+    <div class="page-head">
+        <div class="eyebrow mb-1">The makers</div>
+        <h1>Meet our verified artists</h1>
+        <p class="text-muted mt-1 mb-0">Every store on ArtisanHub belongs to a real local maker approved by our team.</p>
+    </div>
+
+    <form class="card-soft p-3 mb-4" method="get" asp-action="Index">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <div class="position-relative nav-search" style="max-width:none">
+                    <i class="bi bi-search"></i>
+                    <input class="form-control" type="search" name="q" value="@Model.Q" placeholder="Search store names or crafts" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="city" data-autosubmit>
+                    <option value="">All cities</option>
+                    @foreach (var c in Model.Cities)
+                    {
+                        <option value="@c.CityID" selected="@(Model.City == c.CityID)">@c.CityName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.Stores.Count == 0)
+    {
+        <div class="empty-state card-soft"><i class="bi bi-shop"></i>No artists match your search.</div>
+    }
+    else
+    {
+        <div class="row g-3 g-lg-4">
+            @foreach (var s in Model.Stores)
+            {
+                <div class="col-md-6 col-lg-4 col-xl-3"><partial name="_StoreCard" model="s" /></div>
+            }
+        </div>
+    }
+</div>

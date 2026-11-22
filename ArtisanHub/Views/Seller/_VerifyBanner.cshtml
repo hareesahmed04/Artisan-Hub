@@ -1,0 +1,11 @@
+@model Artist
+@if (!Model.IsVerified)
+{
+    <div class="verify-banner mb-4 d-flex gap-3 align-items-start">
+        <i class="bi bi-hourglass-split fs-4"></i>
+        <div>
+            <div class="fw-bold">Your store is waiting for verification</div>
+            <div class="small">You can add products and set up your store now. Customers will see them as soon as the ArtisanHub admin verifies your store.</div>
+        </div>
+    </div>
+}

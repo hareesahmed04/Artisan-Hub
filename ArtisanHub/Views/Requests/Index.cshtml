@@ -1,0 +1,82 @@
+@model List<CustomRequest>
+@{
+    ViewData["Title"] = "Custom requests";
+}
+<div class="container">
+    <div class="page-head d-flex justify-content-between align-items-end flex-wrap gap-2">
+        <div>
+            <h1>Custom requests</h1>
+            <p class="text-muted mb-0 mt-1">Describe your idea, get a quote from the artist, then accept or decline it.</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i> New request</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state card-soft">
+            <i class="bi bi-brush"></i>
+            <h5 class="text-body">No custom requests yet</h5>
+            <p>Many of our artists make pieces to order. Tell them what you have in mind!</p>
+            <a class="btn btn-primary" asp-action="Create">Request a custom piece</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var r in Model)
+            {
+                <div class="col-lg-6">
+                    <div class="card-soft card-pad h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <a class="fw-bold fs-5 text-reset" asp-controller="Stores" asp-action="Details" asp-route-id="@r.ArtistID">@r.Artist.StoreName</a>
+                                <div class="meta mt-1">
+                                    <span><i class="bi bi-geo-alt"></i>@r.Artist.City.CityName</span>
+                                    @if (r.Category != null)
+                                    {
+                                        <span><i class="bi bi-tag"></i>@r.Category.CategoryName</span>
+                                    }
+                                    <span><i class="bi bi-calendar3"></i>@Fmt.Date(r.CreatedAt)</span>
+                                </div>
+                            </div>
+                            <span class="pill @Fmt.StatusClass(r.Status)">@r.Status</span>
+                        </div>
+                        <p class="mb-3" style="white-space:pre-line">@r.Description</p>
+                        <div class="row g-2 small mb-3">
+                            <div class="col-4"><div class="maker-box"><div class="text-muted">Your budget</div><div class="fw-bold">@Fmt.Money(r.Budget)</div></div></div>
+                            <div class="col-4"><div class="maker-box"><div class="text-muted">Needed by</div><div class="fw-bold">@Fmt.Date(r.RequiredBy)</div></div></div>
+                            <div class="col-4"><div class="maker-box"><div class="text-muted">Artist's quote</div><div class="fw-bold text-terra">@(r.QuotedPrice.HasValue ? Fmt.Money(r.QuotedPrice.Value) : "Waiting")</div></div></div>
+                        </div>
+                        @if (r.Status == RequestStatus.Quoted)
+                        {
+                            <div class="d-flex gap-2 mt-auto">
+                                <form asp-action="Respond" method="post" class="flex-grow-1">
+                                    <input type="hidden" name="id" value="@r.RequestID" />
+                                    <input type="hidden" name="accept" value="true" />
+                                    <button class="btn btn-olive w-100" type="submit"><i class="bi bi-check2 me-1"></i> Accept @Fmt.Money(r.QuotedPrice)</button>
+                                </form>
+                                <form asp-action="Respond" method="post" data-confirm="Decline this quote?">
+                                    <input type="hidden" name="id" value="@r.RequestID" />
+                                    <input type="hidden" name="accept" value="false" />
+                                    <button class="btn btn-soft" type="submit">Decline</button>
+                                </form>
+                            </div>
+                        }
+                        else if (r.Status == RequestStatus.Pending)
+                        {
+                            <div class="small text-muted mt-auto"><i class="bi bi-hourglass-split me-1"></i>Waiting for the artist to send a quote.</div>
+                        }
+                        else if (r.Status == RequestStatus.Accepted)
+                        {
+                            <div class="small text-olive mt-auto fw-semibold"><i class="bi bi-hammer me-1"></i>The artist is making your piece.</div>
+                        }
+                        else if (r.Status == RequestStatus.Completed)
+                        {
+                            <div class="small text-olive mt-auto fw-semibold"><i class="bi bi-check-circle me-1"></i>Completed. The artist will arrange delivery with you.</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

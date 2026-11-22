@@ -1,0 +1,65 @@
+@model SellerSalesVm
+@{
+    ViewData["Title"] = "Sales report";
+    var maxMonth = Model.Months.Count > 0 ? Model.Months.Max(m => m.Amount) : 0;
+    var maxProduct = Model.TopProducts.Count > 0 ? Model.TopProducts.Max(m => m.Amount) : 0;
+    var s = Model.Summary;
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"><div class="label">Total sales</div><div class="value">@Fmt.Money(s?.TotalSales ?? 0)</div><div class="small text-muted">from vw_SalesByArtist</div></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"><div class="label">This month</div><div class="value">@Fmt.Money(Model.SalesThisMonth)</div></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"><div class="label">Orders</div><div class="value">@(s?.OrdersCount ?? 0)</div></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card"><div class="label">Items sold</div><div class="value">@(s?.ItemsSold ?? 0)</div></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="panel-card">
+            <div class="card-head"><h5>Sales in the last 6 months</h5></div>
+            <div class="card-pad">
+                <div class="col-chart">
+                    @foreach (var m in Model.Months)
+                    {
+                        var height = maxMonth == 0 ? 0 : (int)(m.Amount / maxMonth * 100);
+                        <div class="col">
+                            <div class="col-val">@(m.Amount == 0 ? "-" : Fmt.Money(m.Amount))</div>
+                            <div class="col-bar" style="height:@(height)%" title="@m.Count items"></div>
+                            <div class="col-lbl">@m.Label</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="panel-card h-100">
+            <div class="card-head"><h5>Best-selling products</h5></div>
+            <div class="card-pad">
+                @if (Model.TopProducts.Count == 0)
+                {
+                    <p class="text-muted mb-0">No sales yet.</p>
+                }
+                @foreach (var p in Model.TopProducts)
+                {
+                    var width = maxProduct == 0 ? 0 : (int)(p.Amount / maxProduct * 100);
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-semibold">@p.Label</span>
+                            <span class="text-muted">@p.Count sold &middot; <span class="fw-bold text-body">@Fmt.Money(p.Amount)</span></span>
+                        </div>
+                        <div class="bar-row p-0" style="grid-template-columns:1fr"><div class="bar-track"><div class="bar-fill" style="width:@(width)%"></div></div></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
